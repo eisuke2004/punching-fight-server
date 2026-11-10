@@ -86,7 +86,8 @@ func Register(w http.ResponseWriter, r *http.Request) {
 	log.Println("Inserting player:", player.ID, player.Name)
 	if err := models.InsertPlayer(db, player); err != nil {
 		log.Println("Insert error:", err)
-		http.Error(w, err.Error(), http.StatusConflict)
+		// 一律で409にするのをやめ、本当のエラーメッセージ（500）として返す
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
