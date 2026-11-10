@@ -34,6 +34,8 @@ func main() {
 		log.Fatalf("DB疎通確認失敗: %v", err)
 	}
 
+
+initTables(db)
 	handlers.InitDB(db)
 
 	r := mux.NewRouter()
@@ -47,4 +49,32 @@ func main() {
 	r.HandleFunc("/ws", handlers.HandleConnections)
 
 	log.Fatal(http.ListenAndServe("0.0.0.0:8080", r))
+}
+
+// データベースに接続した直後の位置にこれを追加する
+func initTables(db *sql.DB) {
+    query := `
+    CREATE TABLE IF NOT EXISTS players (
+        id VARCHAR(255) PRIMARY KEY,
+        name VARCHAR(255) UNIQUE NOT NULL,
+        password VARCHAR(255) NOT NULL,
+        room_id VARCHAR(255),
+        position_x REAL DEFAULT 0,
+        position_y REAL DEFAULT 0,
+        position_z REAL DEFAULT 0
+    );
+    CREATE TABLE IF NOT EXISTS rooms (
+        id VARCHAR(255) PRIMARY KEY
+    );
+    CREATE TABLE IF NOT EXISTS room_players (
+        room_id VARCHAR(255),
+        player_id VARCHAR(255),
+        joined_at TIMESTAMP
+    );
+    `
+    _, err := db.Exec(query)
+    if err != nil {
+        log.Fatalf("テーブルの自動作成に失敗しました: %v", err)
+    }
+    log.Println("データベースのテーブル確認・作成が完了しました！")
 }
