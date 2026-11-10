@@ -11,7 +11,9 @@ require (
 	golang.org/x/crypto v0.38.0
 )
 
+require github.com/lib/pq v1.12.3 // indirect
+
 require (
 	filippo.io/edwards25519 v1.1.0 // indirect
-	github.com/gorilla/websocket v1.5.3 
+	github.com/gorilla/websocket v1.5.3
 )

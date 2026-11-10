@@ -3,12 +3,11 @@ package main
 import (
 	"api/internal/handlers"
 	"database/sql"
-	"fmt"
 	"log"
 	"net/http"
 	"os"
 
-	_ "github.com/go-sql-driver/mysql"
+	_ "github.com/lib/pq" // PostgreSQLドライバに変更
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
 )
@@ -18,15 +17,14 @@ func main() {
 		log.Println("Warning: .envファイルが見つかりません")
 	}
 
-	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true&charset=utf8mb4",
-		os.Getenv("DB_USER"),
-		os.Getenv("DB_PASS"),
-		os.Getenv("DB_HOST"),
-		os.Getenv("DB_PORT"),
-		os.Getenv("DB_NAME"),
-	)
+	// Renderの環境変数「DATABASE_URL」を直接取得して使用する
+	dsn := os.Getenv("DATABASE_URL")
+	if dsn == "" {
+		log.Fatal("DATABASE_URL environment variable is not set")
+	}
 
-	db, err := sql.Open("mysql", dsn)
+	// ドライバ名を "mysql" から "postgres" に変更
+	db, err := sql.Open("postgres", dsn)
 	if err != nil {
 		log.Fatalf("DB接続失敗: %v", err)
 	}
