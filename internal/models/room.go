@@ -73,27 +73,27 @@ func (room *WsRoom) BroadcastToAll(msg interface{}, exclude *websocket.Conn) {
 
 func InsertRoom(db *sql.DB, room Room) error {
 	_, err := db.Exec(
-		"INSERT INTO rooms(id)VALUES(?)",
+		"INSERT INTO rooms(id) VALUES($1)",
 		room.ID)
 	return err
 }
 
 func InsertRoomPlayer(db *sql.DB, roomPlayers RoomPlayer) error {
 	_, err := db.Exec(
-		"INSERT INTO room_players(room_id, player_id,joined_at)VALUES(?,?,?)",
+		"INSERT INTO room_players(room_id, player_id, joined_at) VALUES($1, $2, $3)",
 		roomPlayers.RoomID, roomPlayers.PlayerID, time.Now())
 	return err
 }
 
 func RoomExists(db *sql.DB, roomID string) (bool, error) {
 	var exists bool
-	err := db.QueryRow("SELECT EXISTS(SELECT 1 FROM rooms WHERE id = ?)", roomID).Scan(&exists)
+	err := db.QueryRow("SELECT EXISTS(SELECT 1 FROM rooms WHERE id = $1)", roomID).Scan(&exists)
 	return exists, err
 }
 
 func GetRoomPlayerCount(db *sql.DB, roomID string) (int, error) {
 	var count int
-	err := db.QueryRow("SELECT COUNT(*) FROM room_players WHERE room_id = ?", roomID).Scan(&count)
+	err := db.QueryRow("SELECT COUNT(*) FROM room_players WHERE room_id = $1", roomID).Scan(&count)
 	return count, err
 }
 
@@ -124,7 +124,7 @@ func GetActiveRooms(db *sql.DB) ([]Room, error) {
 
 func GetPlayerId(db *sql.DB, roomID string) (string, error) {
 	var playerId string
-	err := db.QueryRow("SELECT player_id FROM room_players WHERE room_id = ?", roomID).Scan(&playerId)
+	err := db.QueryRow("SELECT player_id FROM room_players WHERE room_id = $1", roomID).Scan(&playerId)
 	if err == sql.ErrNoRows {
 		return "", nil
 	}
@@ -133,7 +133,7 @@ func GetPlayerId(db *sql.DB, roomID string) (string, error) {
 
 func GetPlayerName(db *sql.DB, playerId string) (string, error) {
 	var playerName string
-	err := db.QueryRow("SELECT name FROM players WHERE id = ?", playerId).Scan(&playerName)
+	err := db.QueryRow("SELECT name FROM players WHERE id = $1", playerId).Scan(&playerName)
 	if err == sql.ErrNoRows {
 		return "", nil
 	}
@@ -147,11 +147,11 @@ func GetRoomCount(db *sql.DB) (int, error) {
 }
 
 func DeleteRoomPlayer(db *sql.DB, roomID, playerID string) error {
-	_, err := db.Exec("DELETE FROM room_players WHERE room_id = ? AND player_id = ?", roomID, playerID)
+	_, err := db.Exec("DELETE FROM room_players WHERE room_id = $1 AND player_id = $2", roomID, playerID)
 	return err
 }
 
 func DeleteRoom(db *sql.DB, roomID string) error {
-	_, err := db.Exec("DELETE FROM rooms WHERE id = ?", roomID)
+	_, err := db.Exec("DELETE FROM rooms WHERE id = $1", roomID)
 	return err
 }
