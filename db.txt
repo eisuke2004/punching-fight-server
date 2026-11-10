@@ -1,0 +1,74 @@
+CREATE DATABASE IF NOT EXISTS rungamedb CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
+USE rungamedb;
+
+-- プレイヤー
+CREATE TABLE players (
+  id VARCHAR(36) NOT NULL PRIMARY KEY,
+  name VARCHAR(50) NOT NULL UNIQUE,
+  password VARCHAR(255) NOT NULL,
+  created_at DATETIME NOT NULL
+) ENGINE=InnoDB;
+
+-- ルーム
+CREATE TABLE rooms (
+  id VARCHAR(64) NOT NULL PRIMARY KEY,
+  created_at DATETIME NOT NULL
+) ENGINE=InnoDB;
+
+-- ルーム参加者
+CREATE TABLE room_players (
+  room_id VARCHAR(64) NOT NULL,
+  player_id VARCHAR(36) NOT NULL,
+  joined_at DATETIME NOT NULL,
+  PRIMARY KEY (room_id, player_id),
+  FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE CASCADE,
+  FOREIGN KEY (player_id) REFERENCES players(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+-- ゲーム結果
+CREATE TABLE game_results (
+  id INT AUTO_INCREMENT NOT NULL PRIMARY KEY,
+  room_id VARCHAR(64) NOT NULL,
+  winner_id VARCHAR(36) NOT NULL,
+  finished_at DATETIME NOT NULL,
+  FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE CASCADE,
+  FOREIGN KEY (winner_id) REFERENCES players(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+-- バッジマスタ
+CREATE TABLE badges (
+  id INT AUTO_INCREMENT NOT NULL PRIMARY KEY,
+  name VARCHAR(100) NOT NULL,
+  description TEXT
+) ENGINE=InnoDB;
+
+-- 獲得バッジ
+CREATE TABLE player_badges (
+  player_id VARCHAR(36) NOT NULL,
+  badge_id INT NOT NULL,
+  acquired_at DATETIME NOT NULL,
+  PRIMARY KEY (player_id, badge_id),
+  FOREIGN KEY (player_id) REFERENCES players(id) ON DELETE CASCADE,
+  FOREIGN KEY (badge_id) REFERENCES badges(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+-- プレイヤー進行度
+CREATE TABLE progress_logs (
+  id INT AUTO_INCREMENT NOT NULL PRIMARY KEY,
+  player_id VARCHAR(36) NOT NULL,
+  room_id VARCHAR(64) NOT NULL,
+  progress INT NOT NULL,
+  logged_at DATETIME NOT NULL,
+  FOREIGN KEY (player_id) REFERENCES players(id) ON DELETE CASCADE,
+  FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+-- スコア記録
+CREATE TABLE scores (
+  id INT AUTO_INCREMENT NOT NULL PRIMARY KEY,
+  player_id VARCHAR(36) NOT NULL,
+  score INT NOT NULL,
+  recorded_at DATETIME NOT NULL,
+  stage_id INT NOT NULL,
+  FOREIGN KEY (player_id) REFERENCES players(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
