@@ -33,9 +33,3 @@ func GetPlayer(db *sql.DB, name string) (*Player, error) {
 	}
 	return player, nil
 }
-```[cite: 11]
-
-#### 2. `internal/models/room.go` も同様に修正
-`room_3.go` の中にあるすべての `?` も、順番に応じて `$1`, `$2`, `$3` に書き換える必要があります（例: `WHERE id = ?` なら `WHERE id = $1` に変更）[cite: 12]。
-
-これらを修正してGitHubにプッシュし、Renderのデプロイが完了したあとにUnityから再度「登録」を試してみてください。エラーが解消され、無事に登録とログインができるようになります！
