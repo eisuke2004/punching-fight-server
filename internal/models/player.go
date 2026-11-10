@@ -14,7 +14,7 @@ type Player struct {
 
 func InsertPlayer(db *sql.DB, player Player) error {
 	_, err := db.Exec(
-		"INSERT INTO players(id,name,password)VALUES(?,?,?)",
+		"INSERT INTO players(id, name, password) VALUES($1, $2, $3)",
 		player.ID,
 		player.Name,
 		player.Password)
@@ -22,7 +22,7 @@ func InsertPlayer(db *sql.DB, player Player) error {
 }
 
 func GetPlayer(db *sql.DB, name string) (*Player, error) {
-	row := db.QueryRow("SELECT id, name, password FROM players WHERE name = ?", name)
+	row := db.QueryRow("SELECT id, name, password FROM players WHERE name = $1", name)
 	player := &Player{}
 
 	if err := row.Scan(&player.ID, &player.Name, &player.Password); err != nil {
@@ -33,3 +33,9 @@ func GetPlayer(db *sql.DB, name string) (*Player, error) {
 	}
 	return player, nil
 }
+```[cite: 11]
+
+#### 2. `internal/models/room.go` も同様に修正
+`room_3.go` の中にあるすべての `?` も、順番に応じて `$1`, `$2`, `$3` に書き換える必要があります（例: `WHERE id = ?` なら `WHERE id = $1` に変更）[cite: 12]。
+
+これらを修正してGitHubにプッシュし、Renderのデプロイが完了したあとにUnityから再度「登録」を試してみてください。エラーが解消され、無事に登録とログインができるようになります！
