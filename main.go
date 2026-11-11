@@ -7,9 +7,10 @@ import (
 	"net/http"
 	"os"
 
-	_ "github.com/lib/pq" // PostgreSQLドライバに変更
+	_ "github.com/lib/pq" // PostgreSQLドライバ
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
+	"github.com/rs/cors" // ★ 1. CORSパッケージをインポート
 )
 
 func main() {
@@ -17,13 +18,11 @@ func main() {
 		log.Println("Warning: .envファイルが見つかりません")
 	}
 
-	// Renderの環境変数「DATABASE_URL」を直接取得して使用する
 	dsn := os.Getenv("DATABASE_URL")
 	if dsn == "" {
 		log.Fatal("DATABASE_URL environment variable is not set")
 	}
 
-	// ドライバ名を "mysql" から "postgres" に変更
 	db, err := sql.Open("postgres", dsn)
 	if err != nil {
 		log.Fatalf("DB接続失敗: %v", err)
@@ -34,25 +33,35 @@ func main() {
 		log.Fatalf("DB疎通確認失敗: %v", err)
 	}
 
-
-initTables(db)
+	initTables(db)
 	handlers.InitDB(db)
 
 	r := mux.NewRouter()
 
-	r.HandleFunc("/register", handlers.Register)
-	r.HandleFunc("/login", handlers.Login)
-
-	r.HandleFunc("/createroom", handlers.Create)
-	r.HandleFunc("/joinroom", handlers.Join)
-	r.HandleFunc("/getroom", handlers.Get)
+	r.HandleFunc("/register", handlers.Register).Methods("POST", "OPTIONS")
+	r.HandleFunc("/login", handlers.Login).Methods("POST", "OPTIONS")
+	r.HandleFunc("/createroom", handlers.Create).Methods("POST", "OPTIONS")
+	r.HandleFunc("/joinroom", handlers.Join).Methods("POST", "OPTIONS")
+	r.HandleFunc("/getroom", handlers.Get).Methods("GET", "OPTIONS")
 	r.HandleFunc("/ws", handlers.HandleConnections)
 
-	log.Fatal(http.ListenAndServe("0.0.0.0:8080", r))
+	// ★ 2. CORSのミドルウェア設定を追加
+	c := cors.New(cors.Options{
+		AllowedOrigins:   []string{"*"}, // すべてのサイト（unityroom含む）からのアクセスを許可
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"Authorization", "Content-Type"},
+		AllowCredentials: true,
+	})
+
+	// ★ 3. ルーター(r)をCORSでラップしてハンドラーを作る
+	handler := c.Handler(r)
+
+	// ★ 4. ListenAndServeには "r" ではなく "handler" を渡す
+	log.Fatal(http.ListenAndServe("0.0.0.0:8080", handler))
 }
 
-// データベースに接続した直後の位置にこれを追加する
 func initTables(db *sql.DB) {
+    // （既存のテーブル作成コードそのまま）
     query := `
     CREATE TABLE IF NOT EXISTS players (
         id VARCHAR(255) PRIMARY KEY,
